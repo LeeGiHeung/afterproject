@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:beans="http://www.springframework.org/schema/beans" 
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:c="http://www.springframework.org/schema/c" 
+	xmlns:mvc="http://www.springframework.org/schema/mvc" 
+	xmlns:p="http://www.springframework.org/schema/p" 
+	xsi:schemaLocation="http://www.springframework.org/schema/security 
+	http://www.springframework.org/schema/security/spring-security.xsd http://www.springframework.org/schema/mvc 
+	http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop-4.3.xsd">
+	<!--  authority(권한 설정) 
+		<http auto-config="true" use-expressions="true">
+			<!- 페이지 접근 관련 설정 ->
+		</http>
+	 -->
+	<!--  test를 위해 경로(pattern)에 대해 인증/권한 pass 설정  -->
+	<!--  	<http pattern="/" security="none"></http>
+			<http pattern="/**" security="none"></http>
+	-->
+	<!--  Authentication(인증) manager  -->
+		<authentication-manager>
+		<authentication-provider user-service-ref="customUserDetailsService">
+		<password-encoder ref="passwordEncoder"/>
+		</authentication-provider>
+		</authentication-manager>
+	<!--  custom Class (with User interface, UserDetailsService class)  -->
+		<beans:bean id="customUserDetailsService" class="com.lgh.mysql.security.CustomUserDetailsService"/>
+	<!--  spring 제공 password encoder  -->
+		<beans:bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+	<!--  authority(권한 설정)  -->
+		<http auto-config="true" use-expressions="true">
+	<!--  페이지 접근 관련 설정  -->
+	<!--  권한이 없는 페이지에 접근했을때의 경로 지정권한이 없는 페이지에 접근했을때의 경로 지정   -->
+		<access-denied-handler error-page="/main"/>
+	<!--  처음 접근 페이지("/"요청 = home), permitAll: 모두 접근  -->
+		<intercept-url pattern="/" access="permitAll"/>
+		<intercept-url pattern="/processLogin" access="permitAll"/>
+		<intercept-url pattern="/images/**" access="permitAll"/>
+		<intercept-url pattern="/image/**" access="permitAll"/>
+		<intercept-url pattern="/style/**" access="permitAll"/>
+		<intercept-url pattern="/js/**" access="permitAll"/>
+	<!--  isAnonymous(): 로그인 안한 상태(비회원)만 접근  -->
+		<intercept-url pattern="/login" access="isAnonymous()"/>
+		<intercept-url pattern="/loginView" access="isAnonymous()"/>
+		<intercept-url pattern="/joinView" access="isAnonymous()"/>
+		<intercept-url pattern="/join" access="isAnonymous()"/>
+	<!--  hasRole(): ()안의 권한을 획득한 사람만 접근  -->
+		<intercept-url pattern="/**" access="hasRole('ROLE_USER')" requires-channel="https"/>
+		<form-login login-processing-url="/login" login-page="/loginView" username-parameter="pid" password-parameter="ppw" 
+			default-target-url="/main" authentication-failure-url="/processLogin?error=1" always-use-default-target="true"/>
+		<logout invalidate-session="true" logout-url="/logout" logout-success-url="/processLogin?logout=1" delete-cookies="JSESSIONID,remember-me"/>
+		<remember-me remember-me-parameter="remember-me" remember-me-cookie="remember-me" key="dreamikkey" token-validity-seconds="3600"/>
+	</http>
+</beans:beans>
